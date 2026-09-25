@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Noto+Sans+JP:wght@400;600;700;900&display=swap');
+
+:root {
+  color-scheme: dark;
+  --ink: #f8f5ff;
+  --muted: #b1aac6;
+  --panel: #17132b;
+  --panel-light: #211b3c;
+  --line: #39315a;
+  --accent: #ffca63;
+  --pink: #ff6b9d;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #0c0918;
+  color: var(--ink);
+  font-family: "Noto Sans JP", sans-serif;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle at 20% 0%, #302257 0, transparent 42%),
+    radial-gradient(circle at 100% 80%, #30152f 0, transparent 38%);
+  content: "";
+}
+
+.game-shell { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 42px 0 30px; }
+.game-header { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
+.eyebrow { margin: 0 0 5px; color: var(--pink); font: 700 13px "Barlow Condensed", sans-serif; letter-spacing: .2em; }
+h1 { margin: 0; font: 800 clamp(38px, 7vw, 68px)/.9 "Barlow Condensed", sans-serif; letter-spacing: .03em; }
+.restart-button, #message-button {
+  border: 1px solid #604e8f; border-radius: 8px; padding: 12px 18px; color: var(--ink);
+  background: #272044; font: 700 14px "Noto Sans JP", sans-serif; cursor: pointer;
+}
+.restart-button:hover, #message-button:hover { background: #382c5d; border-color: var(--accent); }
+.game-card { overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); box-shadow: 0 24px 70px #06040d99; }
+.hud { display: flex; gap: 42px; padding: 18px 24px; border-bottom: 1px solid var(--line); background: #1c1733; }
+.stat { display: grid; gap: 2px; }
+.stat-label { color: var(--muted); font: 600 11px "Barlow Condensed", sans-serif; letter-spacing: .15em; }
+.stat strong { color: var(--accent); font: 700 22px "Barlow Condensed", sans-serif; letter-spacing: .04em; }
+.stat:nth-child(3) strong { color: var(--pink); letter-spacing: 3px; font-size: 19px; }
+.canvas-wrap { position: relative; width: 100%; background: #6c6ad1; }
+canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.message { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; text-align: center; padding: 20px; background: #110d20c9; backdrop-filter: blur(3px); }
+.message[hidden] { display: none; }
+.message p { margin: 0; color: var(--accent); font: 700 15px "Barlow Condensed", sans-serif; letter-spacing: .16em; }
+.message h2 { margin: 8px 0 6px; font-size: clamp(24px, 4vw, 38px); }
+.message-detail { color: var(--muted) !important; font: 400 13px "Noto Sans JP", sans-serif !important; letter-spacing: 0 !important; }
+#message-button { margin-top: 20px; background: var(--pink); border-color: var(--pink); color: #1b1020; }
+.controls { display: flex; justify-content: space-between; gap: 20px; padding: 16px 24px; color: var(--muted); font-size: 12px; }
+.controls p { margin: 0; }
+kbd { display: inline-block; min-width: 23px; margin: 0 2px; padding: 3px 5px; border: 1px solid #625583; border-radius: 4px; color: var(--ink); background: #2a2346; font: 700 11px "Barlow Condensed", sans-serif; text-align: center; }
+.touch-controls { display: none; gap: 8px; padding: 0 16px 16px; }
+.touch-controls button { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 12px; color: var(--ink); background: var(--panel-light); font-size: 20px; touch-action: none; }
+footer { padding: 16px 2px; color: var(--muted); font-size: 12px; }
+footer span { padding: 0 6px; color: var(--pink); }
+@media (max-width: 600px) {
+  .game-shell { width: calc(100% - 20px); padding-top: 25px; }
+  .game-header { align-items: start; }
+  .restart-button { padding: 9px 11px; font-size: 12px; }
+  .hud { gap: 20px; padding: 13px 15px; }
+  .stat strong { font-size: 18px; }
+  .controls { display: block; padding: 13px 15px 8px; line-height: 2.2; }
+  .hint { display: none; }
+  .touch-controls { display: flex; }
+}
