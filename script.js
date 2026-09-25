@@ -15,7 +15,7 @@ const HEIGHT = canvas.height;
 const keys = {};
 const levelWidth = 3600;
 const gravity = 0.72;
-let player, cameraX, score, collected, lives, gameState, lastTime, particles;
+let player, cameraX, score, collected, lives, gameState, lastTime, particles, jumpWasDown, beamWasDown, beams;
 
 const platforms = [
   { x: 0, y: 470, w: 650, h: 70 }, { x: 760, y: 470, w: 480, h: 70 },
@@ -34,8 +34,9 @@ const goal = { x: 3440, y: 350, w: 48, h: 120 };
 let coins, enemies;
 
 function resetGame() {
-  player = { x: 90, y: 400, w: 28, h: 42, vx: 0, vy: 0, facing: 1, grounded: false, attacking: 0, invincible: 0 };
+  player = { x: 90, y: 400, w: 28, h: 42, vx: 0, vy: 0, facing: 1, grounded: false, jumps: 0, attacking: 0, invincible: 0 };
   cameraX = 0; score = 0; collected = 0; lives = 3; gameState = "playing"; particles = [];
+  jumpWasDown = false; beamWasDown = false; beams = [];
   coins = coinSpots.map(([x, y]) => ({ x, y, collected: false, bob: Math.random() * 6 }));
   enemies = enemySpots.map(([x, y]) => ({ x, y, w: 30, h: 28, vx: -0.7, alive: true, home: x }));
   messageEl.hidden = true; updateHud();
@@ -57,24 +58,58 @@ function update(dt) {
   const left = keys.ArrowLeft || keys.KeyA;
   const right = keys.ArrowRight || keys.KeyD;
   const jump = keys.Space || keys.ArrowUp || keys.KeyW;
+  const beam = keys.KeyZ;
+  const jumpPressed = jump && !jumpWasDown;
+  const beamPressed = beam && !beamWasDown;
   player.vx += (right ? 0.55 : left ? -0.55 : 0) * step;
   if (!left && !right) player.vx *= Math.pow(0.78, step);
   player.vx = Math.max(-4.7, Math.min(4.7, player.vx));
   if (player.vx) player.facing = Math.sign(player.vx);
-  if (jump && player.grounded) { player.vy = -12.5; player.grounded = false; }
+  if (jump && !player.grounded) {
+    player.vx += player.facing * 0.18 * step;
+    player.vx = Math.max(-5.4, Math.min(5.4, player.vx));
+  }
+  if (jumpPressed && player.jumps < 2) {
+    player.vy = -12.5;
+    player.grounded = false;
+    player.jumps++;
+  }
   player.vy += gravity * step; player.x += player.vx * step; player.y += player.vy * step;
   player.x = Math.max(0, Math.min(levelWidth - player.w, player.x));
   player.grounded = false;
   for (const platform of platforms) {
     if (player.vy >= 0 && player.x + player.w > platform.x && player.x < platform.x + platform.w &&
         player.y + player.h >= platform.y && player.y + player.h - player.vy * step <= platform.y) {
-      player.y = platform.y - player.h; player.vy = 0; player.grounded = true;
+      player.y = platform.y - player.h; player.vy = 0; player.grounded = true; player.jumps = 0;
     }
   }
   if (keys.KeyX && player.attacking <= 0) player.attacking = 13;
   if (player.attacking > 0) player.attacking -= step;
   if (player.invincible > 0) player.invincible -= step;
+  if (beamPressed) {
+    beams.push({
+      x: player.facing > 0 ? player.x + player.w : player.x - 30,
+      y: player.y + 17,
+      w: 30,
+      h: 8,
+      vx: player.facing * 9,
+      life: 70,
+    });
+  }
   const attackBox = { x: player.facing > 0 ? player.x + player.w : player.x - 28, y: player.y + 10, w: 28, h: 22 };
+  for (const currentBeam of beams) {
+    currentBeam.x += currentBeam.vx * step;
+    currentBeam.life -= step;
+    for (const enemy of enemies) {
+      if (enemy.alive && rectsOverlap(currentBeam, enemy)) {
+        enemy.alive = false;
+        currentBeam.life = 0;
+        score += 100;
+        burst(enemy.x + enemy.w / 2, enemy.y, "#e7b84b");
+      }
+    }
+  }
+  beams = beams.filter(currentBeam => currentBeam.life > 0 && currentBeam.x > -100 && currentBeam.x < levelWidth + 100);
   for (const enemy of enemies) {
     if (!enemy.alive) continue;
     enemy.x += enemy.vx * step;
@@ -93,6 +128,8 @@ function update(dt) {
   cameraX += (player.x - cameraX - 330) * 0.1 * step;
   cameraX = Math.max(0, Math.min(levelWidth - WIDTH, cameraX));
   updateParticles(step); updateHud();
+  jumpWasDown = jump;
+  beamWasDown = beam;
 }
 
 function hitPlayer() {
@@ -122,6 +159,7 @@ function draw() {
   drawBackground();
   ctx.save(); ctx.translate(-Math.floor(cameraX), 0);
   platforms.forEach(drawPlatform); coins.forEach(drawCoin); enemies.forEach(drawEnemy); drawGoal(); drawPlayer();
+  beams.forEach(drawBeam);
   particles.forEach(p => { ctx.globalAlpha = Math.max(0, p.life / 35); ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 5, 5); }); ctx.globalAlpha = 1;
   ctx.restore();
 }
@@ -146,6 +184,12 @@ function drawEnemy(e) {
   ctx.fillStyle = "#e0a06d"; ctx.fillRect(e.x + 5, e.y, 20, 13); ctx.fillStyle = "#30252a";
   ctx.fillRect(e.x + 9, e.y + 4, 4, 4); ctx.fillRect(e.x + 19, e.y + 4, 4, 4);
 }
+function drawBeam(beam) {
+  ctx.fillStyle = "#fff4b0";
+  ctx.fillRect(beam.x, beam.y, beam.w, beam.h);
+  ctx.fillStyle = "#c94c4c";
+  ctx.fillRect(beam.x, beam.y + 2, beam.w, 4);
+}
 function drawGoal() {
   ctx.fillStyle = "#d8b66a"; ctx.fillRect(goal.x, goal.y, 6, goal.h); ctx.fillStyle = "#c43e43";
   ctx.beginPath(); ctx.moveTo(goal.x + 6, goal.y); ctx.lineTo(goal.x + 48, goal.y + 14); ctx.lineTo(goal.x + 6, goal.y + 28); ctx.fill();
@@ -153,10 +197,19 @@ function drawGoal() {
 function drawPlayer() {
   if (player.invincible > 0 && Math.floor(player.invincible / 5) % 2 === 0) return;
   ctx.save(); ctx.translate(player.x, player.y); if (player.facing < 0) ctx.scale(-1, 1);
-  ctx.fillStyle = "#3d2b67"; ctx.fillRect(4, 15, 21, 27); ctx.fillStyle = "#ffca63"; ctx.fillRect(7, 4, 18, 17);
-  ctx.fillStyle = "#ff6b9d"; ctx.fillRect(4, 1, 23, 7); ctx.fillStyle = "#25203d"; ctx.fillRect(18, 10, 4, 4);
-  ctx.fillStyle = "#f7f2eb"; ctx.fillRect(5, 38, 9, 5); ctx.fillRect(19, 38, 9, 5);
-  if (player.attacking > 0) { ctx.fillStyle = "#f8f5ff"; ctx.fillRect(27, 17, 20, 4); ctx.fillStyle = "#ffca63"; ctx.fillRect(43, 14, 4, 10); }
+  // 笠をかぶった、オリジナルの和風旅人キャラクター。
+  ctx.fillStyle = "#b8834e"; ctx.fillRect(1, 3, 29, 5);
+  ctx.fillStyle = "#d9a65d"; ctx.fillRect(7, 8, 18, 4);
+  ctx.fillStyle = "#d89a6a"; ctx.fillRect(8, 11, 16, 12);
+  ctx.fillStyle = "#32252b"; ctx.fillRect(19, 15, 3, 3);
+  ctx.fillStyle = "#34515a"; ctx.fillRect(5, 22, 22, 18);
+  ctx.fillStyle = "#d6a94f"; ctx.fillRect(5, 27, 22, 5);
+  ctx.fillStyle = "#8d3f3e"; ctx.fillRect(14, 22, 4, 18);
+  ctx.fillStyle = "#5a3b35"; ctx.fillRect(4, 39, 10, 4); ctx.fillRect(19, 39, 10, 4);
+  if (player.attacking > 0) {
+    ctx.fillStyle = "#f7ead0"; ctx.fillRect(27, 16, 20, 3);
+    ctx.fillStyle = "#b8834e"; ctx.fillRect(43, 13, 4, 9);
+  }
   ctx.restore();
 }
 
