@@ -16,6 +16,9 @@ const keys = {};
 const levelWidth = 3600;
 const gravity = 0.72;
 let player, cameraX, score, collected, lives, gameState, lastTime, particles, jumpWasDown, beamWasDown, beams;
+const backgroundPhoto = new Image();
+backgroundPhoto.crossOrigin = "anonymous";
+backgroundPhoto.src = "https://upload.wikimedia.org/wikipedia/commons/c/c9/20260429_Burg_Himeji_01%2C_Hy%C5%8Dgo%2C_Japan_anagoria.jpg";
 
 const platforms = [
   { x: 0, y: 470, w: 650, h: 70 }, { x: 760, y: 470, w: 480, h: 70 },
@@ -164,48 +167,70 @@ function draw() {
   ctx.restore();
 }
 function drawBackground() {
+  if (backgroundPhoto.complete && backgroundPhoto.naturalWidth > 0) {
+    const scale = Math.max(WIDTH / backgroundPhoto.naturalWidth, HEIGHT / backgroundPhoto.naturalHeight);
+    const photoWidth = backgroundPhoto.naturalWidth * scale;
+    const photoHeight = backgroundPhoto.naturalHeight * scale;
+    const offset = -((cameraX * 0.16) % photoWidth);
+    for (let x = offset - photoWidth; x < WIDTH; x += photoWidth) {
+      ctx.drawImage(backgroundPhoto, x, (HEIGHT - photoHeight) * 0.5, photoWidth, photoHeight);
+    }
+    ctx.fillStyle = "#151b2770";
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    ctx.fillStyle = "#321d1d38";
+    ctx.fillRect(0, HEIGHT * 0.55, WIDTH, HEIGHT * 0.45);
+    ctx.fillStyle = "#00f6ff18";
+    for (let y = 0; y < HEIGHT; y += 6) ctx.fillRect(0, y, WIDTH, 1);
+    ctx.strokeStyle = "#ff2bd655";
+    ctx.lineWidth = 2;
+    for (let x = -200; x < WIDTH + 300; x += 90) {
+      ctx.beginPath(); ctx.moveTo(x - cameraX * .08, HEIGHT); ctx.lineTo(x + 180 - cameraX * .08, HEIGHT * .62); ctx.stroke();
+    }
+    return;
+  }
   const sky = ctx.createLinearGradient(0, 0, 0, HEIGHT); sky.addColorStop(0, "#263d59"); sky.addColorStop(1, "#c47b78"); ctx.fillStyle = sky; ctx.fillRect(0, 0, WIDTH, HEIGHT);
   ctx.fillStyle = "#ffffff22"; for (let i = 0; i < 7; i++) ctx.fillRect(100 + i * 180 - cameraX * .15, 90 + (i % 3) * 38, 80, 8);
   ctx.fillStyle = "#3b4c59"; for (let i = -1; i < 12; i++) { const x = i * 330 - cameraX * .3; ctx.beginPath(); ctx.moveTo(x, 410); ctx.lineTo(x + 160, 210); ctx.lineTo(x + 350, 410); ctx.fill(); }
   ctx.fillStyle = "#26333f"; for (let i = -1; i < 14; i++) { const x = i * 260 - cameraX * .55; ctx.beginPath(); ctx.moveTo(x, 470); ctx.lineTo(x + 120, 300); ctx.lineTo(x + 250, 470); ctx.fill(); }
 }
 function drawPlatform(p) {
-  ctx.fillStyle = "#352a2d"; ctx.fillRect(p.x, p.y, p.w, p.h);
-  ctx.fillStyle = "#bd6b4d"; ctx.fillRect(p.x, p.y, p.w, 8);
-  ctx.fillStyle = "#765044"; for (let x = p.x + 12; x < p.x + p.w; x += 32) ctx.fillRect(x, p.y + 13, 4, 10);
+  ctx.fillStyle = "#111735"; ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.shadowColor = "#00f6ff"; ctx.shadowBlur = 12;
+  ctx.fillStyle = "#00f6ff"; ctx.fillRect(p.x, p.y, p.w, 4); ctx.shadowBlur = 0;
+  ctx.fillStyle = "#24305b"; for (let x = p.x + 12; x < p.x + p.w; x += 32) ctx.fillRect(x, p.y + 13, 4, 10);
 }
 function drawCoin(c) {
   if (c.collected) return; const bob = Math.sin(Date.now() / 180 + c.bob) * 4;
-  ctx.fillStyle = "#ffe184"; ctx.beginPath(); ctx.arc(c.x, c.y + bob, 9, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#c98248"; ctx.fillRect(c.x - 2, c.y - 5 + bob, 4, 10);
+  ctx.shadowColor = "#ffe600"; ctx.shadowBlur = 16; ctx.fillStyle = "#ffe600"; ctx.beginPath(); ctx.arc(c.x, c.y + bob, 9, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+  ctx.fillStyle = "#fff8a0"; ctx.fillRect(c.x - 2, c.y - 5 + bob, 4, 10);
 }
 function drawEnemy(e) {
-  if (!e.alive) return;   ctx.fillStyle = "#a84245"; ctx.fillRect(e.x, e.y + 5, e.w, e.h - 5);
-  ctx.fillStyle = "#e0a06d"; ctx.fillRect(e.x + 5, e.y, 20, 13); ctx.fillStyle = "#30252a";
+  if (!e.alive) return; ctx.shadowColor = "#ff2bd6"; ctx.shadowBlur = 10; ctx.fillStyle = "#7d1b78"; ctx.fillRect(e.x, e.y + 5, e.w, e.h - 5); ctx.shadowBlur = 0;
+  ctx.fillStyle = "#b6e9ed"; ctx.fillRect(e.x + 5, e.y, 20, 13); ctx.fillStyle = "#160d35";
   ctx.fillRect(e.x + 9, e.y + 4, 4, 4); ctx.fillRect(e.x + 19, e.y + 4, 4, 4);
 }
 function drawBeam(beam) {
-  ctx.fillStyle = "#fff4b0";
+  ctx.shadowColor = "#00f6ff"; ctx.shadowBlur = 12; ctx.fillStyle = "#e8ffff";
   ctx.fillRect(beam.x, beam.y, beam.w, beam.h);
-  ctx.fillStyle = "#c94c4c";
+  ctx.shadowBlur = 0; ctx.fillStyle = "#ff2bd6";
   ctx.fillRect(beam.x, beam.y + 2, beam.w, 4);
 }
 function drawGoal() {
-  ctx.fillStyle = "#d8b66a"; ctx.fillRect(goal.x, goal.y, 6, goal.h); ctx.fillStyle = "#c43e43";
+  ctx.shadowColor = "#00f6ff"; ctx.shadowBlur = 12; ctx.fillStyle = "#00f6ff"; ctx.fillRect(goal.x, goal.y, 6, goal.h); ctx.shadowBlur = 0; ctx.fillStyle = "#ff2bd6";
   ctx.beginPath(); ctx.moveTo(goal.x + 6, goal.y); ctx.lineTo(goal.x + 48, goal.y + 14); ctx.lineTo(goal.x + 6, goal.y + 28); ctx.fill();
 }
 function drawPlayer() {
   if (player.invincible > 0 && Math.floor(player.invincible / 5) % 2 === 0) return;
   ctx.save(); ctx.translate(player.x, player.y); if (player.facing < 0) ctx.scale(-1, 1);
   // 笠をかぶった、オリジナルの和風旅人キャラクター。
-  ctx.fillStyle = "#b8834e"; ctx.fillRect(1, 3, 29, 5);
-  ctx.fillStyle = "#d9a65d"; ctx.fillRect(7, 8, 18, 4);
-  ctx.fillStyle = "#d89a6a"; ctx.fillRect(8, 11, 16, 12);
-  ctx.fillStyle = "#32252b"; ctx.fillRect(19, 15, 3, 3);
-  ctx.fillStyle = "#34515a"; ctx.fillRect(5, 22, 22, 18);
-  ctx.fillStyle = "#d6a94f"; ctx.fillRect(5, 27, 22, 5);
-  ctx.fillStyle = "#8d3f3e"; ctx.fillRect(14, 22, 4, 18);
-  ctx.fillStyle = "#5a3b35"; ctx.fillRect(4, 39, 10, 4); ctx.fillRect(19, 39, 10, 4);
+  ctx.shadowColor = "#00f6ff"; ctx.shadowBlur = 10; ctx.fillStyle = "#9a53ff"; ctx.fillRect(1, 3, 29, 5); ctx.shadowBlur = 0;
+  ctx.fillStyle = "#dffcff"; ctx.fillRect(7, 8, 18, 4);
+  ctx.fillStyle = "#ff8ce9"; ctx.fillRect(8, 11, 16, 12);
+  ctx.fillStyle = "#160d35"; ctx.fillRect(19, 15, 3, 3);
+  ctx.fillStyle = "#153e68"; ctx.fillRect(5, 22, 22, 18);
+  ctx.fillStyle = "#00f6ff"; ctx.fillRect(5, 27, 22, 5);
+  ctx.fillStyle = "#ff2bd6"; ctx.fillRect(14, 22, 4, 18);
+  ctx.fillStyle = "#17314d"; ctx.fillRect(4, 39, 10, 4); ctx.fillRect(19, 39, 10, 4);
   if (player.attacking > 0) {
     ctx.fillStyle = "#f7ead0"; ctx.fillRect(27, 16, 20, 3);
     ctx.fillStyle = "#b8834e"; ctx.fillRect(43, 13, 4, 9);
