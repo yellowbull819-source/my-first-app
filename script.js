@@ -164,34 +164,35 @@ function draw() {
   ctx.restore();
 }
 function drawBackground() {
-  const sky = ctx.createLinearGradient(0, 0, 0, HEIGHT); sky.addColorStop(0, "#263d59"); sky.addColorStop(1, "#c47b78"); ctx.fillStyle = sky; ctx.fillRect(0, 0, WIDTH, HEIGHT);
-  ctx.fillStyle = "#ffffff22"; for (let i = 0; i < 7; i++) ctx.fillRect(100 + i * 180 - cameraX * .15, 90 + (i % 3) * 38, 80, 8);
-  ctx.fillStyle = "#3b4c59"; for (let i = -1; i < 12; i++) { const x = i * 330 - cameraX * .3; ctx.beginPath(); ctx.moveTo(x, 410); ctx.lineTo(x + 160, 210); ctx.lineTo(x + 350, 410); ctx.fill(); }
-  ctx.fillStyle = "#26333f"; for (let i = -1; i < 14; i++) { const x = i * 260 - cameraX * .55; ctx.beginPath(); ctx.moveTo(x, 470); ctx.lineTo(x + 120, 300); ctx.lineTo(x + 250, 470); ctx.fill(); }
+  const sky = ctx.createLinearGradient(0, 0, 0, HEIGHT); sky.addColorStop(0, "#20264d"); sky.addColorStop(1, "#d27772"); ctx.fillStyle = sky; ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  ctx.fillStyle = "#ffe8a522"; for (let i = 0; i < 7; i++) ctx.fillRect(100 + i * 180 - cameraX * .15, 90 + (i % 3) * 38, 80, 8);
+  ctx.fillStyle = "#46536a"; for (let i = -1; i < 12; i++) { const x = i * 330 - cameraX * .3; ctx.beginPath(); ctx.moveTo(x, 410); ctx.lineTo(x + 160, 210); ctx.lineTo(x + 350, 410); ctx.fill(); }
+  ctx.fillStyle = "#293449"; for (let i = -1; i < 14; i++) { const x = i * 260 - cameraX * .55; ctx.beginPath(); ctx.moveTo(x, 470); ctx.lineTo(x + 120, 300); ctx.lineTo(x + 250, 470); ctx.fill(); }
+  ctx.fillStyle = "#171525aa"; for (let y = 0; y < HEIGHT; y += 6) ctx.fillRect(0, y, WIDTH, 2);
 }
 function drawPlatform(p) {
-  ctx.fillStyle = "#352a2d"; ctx.fillRect(p.x, p.y, p.w, p.h);
-  ctx.fillStyle = "#bd6b4d"; ctx.fillRect(p.x, p.y, p.w, 8);
+  ctx.fillStyle = "#3d3040"; ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.fillStyle = "#e6a354"; ctx.fillRect(p.x, p.y, p.w, 8);
   ctx.fillStyle = "#765044"; for (let x = p.x + 12; x < p.x + p.w; x += 32) ctx.fillRect(x, p.y + 13, 4, 10);
 }
 function drawCoin(c) {
   if (c.collected) return; const bob = Math.sin(Date.now() / 180 + c.bob) * 4;
-  ctx.fillStyle = "#ffe184"; ctx.beginPath(); ctx.arc(c.x, c.y + bob, 9, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#c98248"; ctx.fillRect(c.x - 2, c.y - 5 + bob, 4, 10);
+  ctx.fillStyle = "#ffd447"; ctx.fillRect(c.x - 7, c.y - 9 + bob, 14, 18);
+  ctx.fillStyle = "#fff0a1"; ctx.fillRect(c.x - 2, c.y - 6 + bob, 4, 12);
 }
 function drawEnemy(e) {
-  if (!e.alive) return;   ctx.fillStyle = "#a84245"; ctx.fillRect(e.x, e.y + 5, e.w, e.h - 5);
+  if (!e.alive) return; ctx.fillStyle = "#b94b59"; ctx.fillRect(e.x, e.y + 5, e.w, e.h - 5);
   ctx.fillStyle = "#e0a06d"; ctx.fillRect(e.x + 5, e.y, 20, 13); ctx.fillStyle = "#30252a";
   ctx.fillRect(e.x + 9, e.y + 4, 4, 4); ctx.fillRect(e.x + 19, e.y + 4, 4, 4);
 }
 function drawBeam(beam) {
   ctx.fillStyle = "#fff4b0";
   ctx.fillRect(beam.x, beam.y, beam.w, beam.h);
-  ctx.fillStyle = "#c94c4c";
+  ctx.fillStyle = "#cf5362";
   ctx.fillRect(beam.x, beam.y + 2, beam.w, 4);
 }
 function drawGoal() {
-  ctx.fillStyle = "#d8b66a"; ctx.fillRect(goal.x, goal.y, 6, goal.h); ctx.fillStyle = "#c43e43";
+  ctx.fillStyle = "#d8b66a"; ctx.fillRect(goal.x, goal.y, 6, goal.h); ctx.fillStyle = "#cf5362";
   ctx.beginPath(); ctx.moveTo(goal.x + 6, goal.y); ctx.lineTo(goal.x + 48, goal.y + 14); ctx.lineTo(goal.x + 6, goal.y + 28); ctx.fill();
 }
 function drawPlayer() {
